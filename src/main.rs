@@ -62,7 +62,12 @@ async fn main() {
         .get(&args.target_leader)
         .expect("no target leader slots found");
 
-    let next_leader_slot = *target_slots.first().unwrap();
+    let next_leader_slot = target_slots
+        .iter()
+        .position(|x| x > &(current_slot as usize))
+        .and_then(|ix| target_slots.get(ix).copied())
+        .expect("no next leader slots found");
+
     println!(
         "approx time to next target slot: {} mins",
         (next_leader_slot as f64 - current_slot as f64) * 0.4 / 60.0
@@ -91,6 +96,7 @@ async fn main() {
             (next_leader_slot as f64 - current_slot as f64) * 0.4 / 60.0
         );
     }
+    println!("sending transactions");
 
     //send 10 transactions to the leader
     let (block_hash, _) = rpc
