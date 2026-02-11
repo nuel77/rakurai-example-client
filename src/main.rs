@@ -56,11 +56,20 @@ async fn main() {
 
     //get the leader schedule
     let mut current_slot = rpc.get_slot().await.unwrap();
+    let epoch = rpc.get_epoch_info().await.unwrap();
+    let first_slot_in_epoch = epoch.absolute_slot - epoch.slot_index;
+    println!("first_slot_in_epoch: {:?}", first_slot_in_epoch);
     let leader_schedule = rpc.get_leader_schedule(Some(current_slot)).await.unwrap();
     let leader_schedule = leader_schedule.unwrap();
-    let target_slots = leader_schedule
+    let mut target_slots = leader_schedule
         .get(&args.target_leader)
-        .expect("no target leader slots found");
+        .expect("no target leader slots found")
+        .clone()
+        .into_iter()
+        .map(|offset| first_slot_in_epoch as usize + offset)
+        .collect::<Vec<_>>();
+
+    target_slots.sort_unstable();
 
     let next_leader_slot = target_slots
         .iter()
@@ -69,7 +78,7 @@ async fn main() {
         .expect("no next leader slots found");
 
     println!(
-        "approx time to next target slot: {} mins",
+        "approx time to next target slot: {:2} mins",
         (next_leader_slot as f64 - current_slot as f64) * 0.4 / 60.0
     );
 
