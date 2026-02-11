@@ -123,6 +123,11 @@ pub fn create_rakurai_virtual_bundle(
     let source = create_dummy_source_transaction(signer, block_hash);
     let source_signature = source.get_signature();
     let backrun = create_backrun_transaction(signer, block_hash, source_signature);
+    println!(
+        "source signature: {:?}, backrun signature {:?}",
+        source_signature,
+        backrun.get_signature()
+    );
     [source, backrun]
         .iter()
         .map(|txn| bincode::serialize(txn).unwrap())
